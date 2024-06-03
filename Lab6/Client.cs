@@ -14,7 +14,6 @@ namespace Lab6
 {
     public partial class Client : Form
     {
-        private int isLock = 0;
         public Client()
         {
             InitializeComponent();
@@ -22,6 +21,12 @@ namespace Lab6
 
         private async void button2_Click(object sender, EventArgs e)
         {
+            //nếu textbox 1 chưa có tên, thông báo lỗi
+            if (textBox1.Text == "")
+            {
+                MessageBox.Show("Vui lòng nhập tên");
+                return;
+            }
             try
             {
                 TcpClient tcpClient = new TcpClient();
@@ -33,6 +38,11 @@ namespace Lab6
 
                 // Tạo luồng mạng từ TcpClient
                 NetworkStream networkStream = tcpClient.GetStream();
+
+                // gửi tên cho server
+                string datatoSend = textBox1.Text;
+                byte[] bufferSend = Encoding.ASCII.GetBytes(datatoSend);
+                await networkStream.WriteAsync(bufferSend, 0, bufferSend.Length);
 
                 // Khởi tạo buffer để nhận dữ liệu
                 byte[] buffer = new byte[1024];
@@ -57,6 +67,10 @@ namespace Lab6
                         comboBox1.Enabled = false;
                         comboBox2.Enabled = false;
                         richTextBox1.Enabled = false;
+                        foreach(Control control in this.Controls)
+                        {
+                            control.Enabled = false;
+                        }   
                     }
                     else if (dataReceived == "Quay da mo khoa")
                     {
@@ -68,6 +82,8 @@ namespace Lab6
                         comboBox2.Enabled = true;
                         richTextBox1.Enabled = true;
                     }
+                    
+                    
                 }
             }
             catch (Exception ex)

@@ -35,7 +35,7 @@ namespace Lab6
             Socket listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
             listenerSocket.Bind(ipEndPoint);
-            listenerSocket.Listen(3);
+            listenerSocket.Listen(10);
 
             while (true)
             {
@@ -52,109 +52,67 @@ namespace Lab6
         private void HandleClient(object? clientSocketObj)
         {
             Socket clientSocket = (Socket)clientSocketObj!;
-
+            //nhận dữ liệu từ server
+            byte[] bufferReceive = new byte[1024];
+            int bytesRead = clientSocket.Receive(bufferReceive);
+            string receivedClientName = Encoding.ASCII.GetString(bufferReceive, 0, bytesRead);
             //3 client kết nối sẽ được phân vào lần lượt các quầy A, B, C và server thực hiện lưu trữ các client dưới dạng tên quầy và số thứ tự socket (ví dụ socket 1, socket 2...)
 
-            string clientName = "";
-            if (clientSockets.Count % 3 == 1)
-            {
-                clientName = "Quầy A";
-            }
-            else if (clientSockets.Count % 3 == 2)
-            {
-                clientName = "Quầy B";
-            }
-            else
-            {
-                clientName = "Quầy C";
-            }
+            string clientName = receivedClientName;
             clients.Add(clientSocket, clientName);
             richTextBox1.AppendText("Client " + clientSocket.RemoteEndPoint + " assigned to " + clientName + Environment.NewLine);
 
-            //mỗi client có 1 số thứ tự socket (ví dụ socket 1, socket 2...) và server thực hiện lưu trữ các client dưới dạng tên quầy và số thứ tự socket
-            //server sẽ gửi thông báo đến client về số thứ tự socket của mình
-            byte[] buffer = Encoding.ASCII.GetBytes("You are client number " + clientSockets.Count + " and you are assigned to " + clientName);
+            byte[] buffer = Encoding.ASCII.GetBytes("Hello" + clientName + "You are client number:" + clientSockets.Count);
+            checkedListBox1.Items.Add(clientName);
             clientSocket.Send(buffer);
 
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //khi nhấn nút Khoá, server sẽ gửi thông báo đến client ở quầy đó, và khoá tất cả các control của client đó
-            //server sẽ gửi thông báo đến client về việc quầy đó đã bị khoá
+            //khi nhấn nút Khoá, server sẽ gửi thông báo đến client ở quầy đó
+            if (checkedListBox1.SelectedItem == null)
+            {
+                richTextBox1.AppendText("Hãy chọn 1 client để khoá" + Environment.NewLine);
+                return;
+            }
             foreach (KeyValuePair<Socket, string> client in clients)
             {
-                if (client.Value == "Quầy A")
+                //duyệt qua tất cả các checkedListBox được chọn để kiểm tra xem client nào được chọn
+                foreach (var item in checkedListBox1.CheckedItems)
                 {
-                    richTextBox1.AppendText("Đã khoá quầy A" + Environment.NewLine);
-                    byte[] buffer = Encoding.ASCII.GetBytes("Quay da bi khoa");
-                    client.Key.Send(buffer);
+                        if (client.Value == item.ToString())
+                        {
+                            byte[] buffer = Encoding.ASCII.GetBytes("Quay da bi khoa");
+                            client.Key.Send(buffer);
+                        }
                 }
+                
+
             }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            foreach (KeyValuePair<Socket, string> client in clients)
+            //khi nhấn nút Khoá, server sẽ gửi thông báo đến client ở quầy đó
+            if (checkedListBox1.SelectedItem == null)
             {
-                if (client.Value == "Quầy A")
-                {
-                    richTextBox1.AppendText("Đã mở khoá quầy A" + Environment.NewLine);
-                    byte[] buffer = Encoding.ASCII.GetBytes("Quay da mo khoa");
-                    client.Key.Send(buffer);
-                }
+                richTextBox1.AppendText("Hãy chọn 1 client để mở khoá" + Environment.NewLine);
+                return;
             }
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
             foreach (KeyValuePair<Socket, string> client in clients)
             {
-                if (client.Value == "Quầy B")
+                //duyệt qua tất cả các checkedListBox được chọn để kiểm tra xem client nào được chọn
+                foreach (var item in checkedListBox1.CheckedItems)
                 {
-                    richTextBox1.AppendText("Đã khoá quầy B" + Environment.NewLine);
-                    byte[] buffer = Encoding.ASCII.GetBytes("Quay da bi khoa");
-                    client.Key.Send(buffer);
+                    if (client.Value == item.ToString())
+                    {
+                        byte[] buffer = Encoding.ASCII.GetBytes("Quay da mo khoa");
+                        client.Key.Send(buffer);
+                    }
                 }
-            }
-        }
 
-        private void button4_Click(object sender, EventArgs e)
-        {
-            foreach (KeyValuePair<Socket, string> client in clients)
-            {
-                if (client.Value == "Quầy B")
-                {
-                    richTextBox1.AppendText("Đã mở khoá quầy B" + Environment.NewLine);
-                    byte[] buffer = Encoding.ASCII.GetBytes("Quay da mo khoa");
-                    client.Key.Send(buffer);
-                }
-            }
-        }
 
-        private void button5_Click(object sender, EventArgs e)
-        {
-            foreach (KeyValuePair<Socket, string> client in clients)
-            {
-                if (client.Value == "Quầy C")
-                {
-                    richTextBox1.AppendText("Đã khoá quầy C" + Environment.NewLine);
-                    byte[] buffer = Encoding.ASCII.GetBytes("Quay da bi khoa");
-                    client.Key.Send(buffer);
-                }
-            }
-        }
-
-        private void button6_Click(object sender, EventArgs e)
-        {
-            foreach (KeyValuePair<Socket, string> client in clients)
-            {
-                if (client.Value == "Quầy C")
-                {
-                    richTextBox1.AppendText("Đã mở khoá quầy C" + Environment.NewLine);
-                    byte[] buffer = Encoding.ASCII.GetBytes("Quay da mo khoa");
-                    client.Key.Send(buffer);
-                }
             }
         }
     }
